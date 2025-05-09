@@ -2,6 +2,16 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ContaContabilController;
+use App\Models\ContaContabil;
+use App\Http\Controllers\TipoServicoController;
+use App\Http\Controllers\ContaController;
+use App\Exports\TipoServicosExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\TipoServico;
+use App\Http\Controllers\CentroDeCustoController;
+use App\Http\Controllers\SaldoContabilController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,10 +40,24 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-Route::get('/conta', function () {
-    return view('/conta/contas');
-});
+Route::resource('contas', ContaContabilController::class);
+Route::resource('tipo-servicos', TipoServicoController::class);
+Route::get('/contas/export/pdf', [ContaController::class, 'exportPDF'])->name('contas.export.pdf');
+Route::get('/contas/export/excel', [ContaController::class, 'exportExcel'])->name('contas.export.excel');
+Route::get('/contas/export/pdf', [ContaController::class, 'exportPDF']);
+Route::get('/contas/export/pdf', [ContaController::class, 'exportPDF'])->name('contas.export.pdf');
 
-Route::get('/saldo', function () {
-    return view('saldos');
-});
+Route::get('/tipo-servicos/export/excel', function () {
+    return Excel::download(new TipoServicosExport, 'tipo_servicos.xlsx');
+})->name('tipo-servicos.export.excel');
+
+Route::get('/tipo-servicos/export/pdf', function () {
+    $dados = \App\Models\TipoServico::with('contaContabil')->get();
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('tipo_servicos.pdf', compact('dados'));
+    return $pdf->download('tipo_servicos.pdf');
+})->name('tipo-servicos.export.pdf');
+
+Route::resource('centros', CentroDeCustoController::class);
+Route::get('/centros/export/excel', [CentroDeCustoController::class, 'exportExcel'])->name('centros.export.excel');
+Route::get('/centros/export/pdf', [CentroDeCustoController::class, 'exportPdf'])->name('centros.export.pdf');
+Route::resource('saldos', SaldoContabilController::class);
