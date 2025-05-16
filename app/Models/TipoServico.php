@@ -15,8 +15,10 @@ class TipoServico extends Model
     //}
 
     public function contaContabil()
-{
-    return $this->belongsTo(ContaContabil::class, 'conta_contabil_id');
-}
+    {
+        return $this->belongsTo(ContaContabil::class, 'conta_contabil_id');
+    }
+
+   
 }
 

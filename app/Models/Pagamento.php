@@ -9,6 +9,11 @@ class Pagamento extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'data_pagamento' => 'date',
+        'data_vencimento' => 'date',
+    ];
+
     protected $fillable = [
         'saldos_contabeis_id',
         'cp',
@@ -16,15 +21,25 @@ class Pagamento extends Model
         'notafiscal',
         'data_vencimento',
         'valor',
+        'valor_original',
         'data_pagamento',
         'descricao',
+        'tipo_servico_id',
     ];
 
     /**
-     * Relacionamento com o saldo contábil (centro de custo)
+     * Relacionamento com saldo contábil
      */
     public function saldoContabil()
     {
-        return $this->belongsTo(\App\Models\SaldoContabil::class, 'saldos_contabeis_id');
+        return $this->belongsTo(SaldoContabil::class, 'saldos_contabeis_id');
+    }
+
+    /**
+     * Relacionamento com tipo de serviço
+     */
+    public function tipoServico()
+    {
+        return $this->belongsTo(TipoServico::class, 'tipo_servico_id');
     }
 }

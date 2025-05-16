@@ -19,10 +19,12 @@
 
         <div class="mb-3">
             <label>Centro de Custo:</label>
-            <select name="saldos_contabeis_id" class="form-select" required>
-                <option value="">-- Selecione um Centro de Custo --</option>
+            <select name="saldos_contabeis_id" id="saldos_contabeis_id" class="form-select" required>
+                <option value="">-- Selecione um Centro de Custo --
+
+                </option>
                 @foreach ($saldos as $saldo)
-                    <option value="{{ $saldo->id }}">
+                    <option value="{{ $saldo->id }}" data-conta="{{ $saldo->contaContabil->id}}">
                         {{ $saldo->centroDeCusto->codigo ?? '-' }} - {{ $saldo->centroDeCusto->descricao ?? '-' }} |
                         {{ $saldo->contaContabil->codigo ?? '-' }} - {{ $saldo->contaContabil->descricao ?? '-' }}
                     </option>
@@ -30,14 +32,9 @@
             </select>
         </div>
         <div class="mb-3">
-            <label for="tipo_servico_id">Tipo de Serviço:</label>
-            <select name="tipo_servico_id" class="form-select" required>
-                <option value="">-- Selecione --</option>
-                @foreach($tiposServicos as $tipo)
-                    <option value="{{ $tipo->id }}">
-                        {{ $tipo->descricao }} | Conta: {{ $tipo->contaContabil->codigo ?? '' }} - {{ $tipo->contaContabil->descricao ?? '' }}
-                    </option>
-                @endforeach
+            <label>Tipo de Serviço:</label>
+            <select name="tipo_servico_id" id="tipo_servico_id" class="form-select">
+                <option value="">-- Selecione o Tipo de Serviço --</option>
             </select>
         </div>
 
@@ -85,4 +82,29 @@
         <a href="{{ route('pagamentos.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
+<script>
+    document.getElementById('saldos_contabeis_id').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const contaId = selectedOption.getAttribute('data-conta');
+
+        const tipoServicoSelect = document.getElementById('tipo_servico_id');
+        tipoServicoSelect.innerHTML = '<option value="">Carregando...</option>';
+
+        if (contaId) {
+            fetch(`/tipos-servico/por-conta/${contaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    tipoServicoSelect.innerHTML = '<option value="">-- Selecione o Tipo de Serviço --</option>';
+                    data.forEach(tipo => {
+                        const option = document.createElement('option');
+                        option.value = tipo.id;
+                        option.textContent = tipo.nome;
+                        tipoServicoSelect.appendChild(option);
+                    });
+                });
+        } else {
+            tipoServicoSelect.innerHTML = '<option value="">-- Selecione o Tipo de Serviço --</option>';
+        }
+    });
+</script>
 @endsection

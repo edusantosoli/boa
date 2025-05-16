@@ -59,4 +59,11 @@ class TipoServicoController extends Controller
 
         return redirect()->route('tipo-servicos.index')->with('success', 'Excluído com sucesso.');
     }
+
+    public function porConta($contaId)
+{
+    $tipos = TipoServico::where('conta_contabil_id', $contaId)->get();
+
+    return response()->json($tipos);
+}
 }

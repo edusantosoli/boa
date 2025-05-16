@@ -42,7 +42,7 @@ class PagamentoController extends Controller
             'fornecedor' => 'nullable|string|max:255',
             'notafiscal' => 'nullable|string|max:50',
             'data_vencimento' => 'required|date', // O input vem como Y-m-d mesmo que você exiba como d/m/Y
-            'valor_original' => 'nullable|numeric',
+            'valor_original' => 'nullable|numeric|min:0.01',
             'descricao' => 'nullable|string|max:255',
             'tipo_servico_id' => 'required|exists:tipo_servicos,id',
         ]);
@@ -67,8 +67,16 @@ class PagamentoController extends Controller
     public function edit($id)
     {
         $pagamento = Pagamento::findOrFail($id);
-        $saldos = SaldosContabeis::all();
-        return view('pagamentos.edit', compact('pagamento', 'saldos'));
+       
+        $saldos = SaldoContabil::with('centroDeCusto','contaContabil')->get();
+        $contaContabilId = $pagamento->saldoContabil->conta_contabil_id ?? null;
+
+        $tipos_servico = [];
+        if ($contaContabilId){
+            $tipos_servico = TipoServico::where('conta_contabil_id', $contaContabilId)->get();
+        }
+
+        return view('pagamentos.edit', compact('pagamento', 'saldos'))->with('tipos_servico', $tipos_servico);
     }
 
     // Atualizar pagamento
@@ -81,9 +89,10 @@ class PagamentoController extends Controller
             'cp' => 'nullable|string|max:10',
             'fornecedor' => 'nullable|string|max:255',
             'notafiscal' => 'nullable|string|max:50',
-            'vencimento' => 'nullable|date_format:Y-m-d', // O input vem como Y-m-d mesmo que você exiba como d/m/Y
-            'valor_original' => 'nullable|numeric',
-            'glosa' => 'nullable|string|max:255',
+            'data_vencimento' => 'nullable|date_format:Y-m-d', // O input vem como Y-m-d mesmo que você exiba como d/m/Y
+            'valor_Original' => 'required|numeric|min:0.01',
+            'descricao' => 'nullable|string|max:255',
+            'tipo_servico_id' => 'required|exists:tipo_servicos,id',
         ]);
 
         $pagamento = Pagamento::findOrFail($id);

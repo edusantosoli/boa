@@ -69,5 +69,10 @@ Route::resource('saldos', SaldoContabilController::class);
 Route::resource('lancamentos', LancamentoContabilController::class);
 Route::resource('pagamentos', PagamentoController::class);
 Route::post('/pagamentos/importar', [PagamentoController::class, 'importar'])->name('pagamentos.importar');
+Route::get('/tipos-servico/por-conta/{contaId}', function ($contaId) {
+    return \App\Models\TipoServico::where('conta_contabil_id', $contaId)->get();
+    });
+Route::get('/tipos-servico/por-conta/{contaId}', [TipoServicoController::class, 'porConta']);
+Route::get('/tipos-servico/por-conta/{contaId}', [App\Http\Controllers\TipoServicoController::class, 'porConta']);
 
 
