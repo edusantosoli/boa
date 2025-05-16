@@ -12,6 +12,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\TipoServico;
 use App\Http\Controllers\CentroDeCustoController;
 use App\Http\Controllers\SaldoContabilController;
+use App\Http\Controllers\LancamentoContabilController;
+use App\Http\Controllers\PagamentoController;
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -61,3 +65,9 @@ Route::resource('centros', CentroDeCustoController::class);
 Route::get('/centros/export/excel', [CentroDeCustoController::class, 'exportExcel'])->name('centros.export.excel');
 Route::get('/centros/export/pdf', [CentroDeCustoController::class, 'exportPdf'])->name('centros.export.pdf');
 Route::resource('saldos', SaldoContabilController::class);
+
+Route::resource('lancamentos', LancamentoContabilController::class);
+Route::resource('pagamentos', PagamentoController::class);
+Route::post('/pagamentos/importar', [PagamentoController::class, 'importar'])->name('pagamentos.importar');
+
+

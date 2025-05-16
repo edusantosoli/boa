@@ -1,8 +1,9 @@
 @extends('layouts.menu')
 
 @section('content')
-<div class="container">
+<div>
     <h1>Editar Tipo de Serviço</h1>
+    <br>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -20,7 +21,7 @@
         @method('PUT')
 
         <div class="form-group">
-            <label for="nome">Nome do Tipo de Serviço</label>
+            <label for="nome">Tipo de Serviço</label>
             <input type="text" name="nome" class="form-control" value="{{ old('nome', $tipo->nome) }}" required>
         </div>
 
@@ -30,7 +31,7 @@
                 <option value="">-- Selecione uma conta contábil --</option>
                 @foreach ($contas as $conta)
                     <option value="{{ $conta->id }}" {{ (old('conta_contabil_id', $tipo->conta_contabil_id) == $conta->id) ? 'selected' : '' }}>
-                        {{ $conta->nome }}
+                        {{ $conta->codigo }} - {{$conta->descricao}}
                     </option>
                 @endforeach
             </select>

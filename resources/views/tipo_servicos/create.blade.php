@@ -1,7 +1,7 @@
 @extends('layouts.menu')
 
 @section('content')
-<div class="container">
+<div>
     <h1>Cadastrar Tipo de Serviço</h1>
 
     @if ($errors->any())
@@ -19,11 +19,6 @@
         @csrf
 
         <div class="form-group">
-            <label for="nome">Nome do Tipo de Serviço</label>
-            <input type="text" name="nome" class="form-control" value="{{ old('nome') }}" required>
-        </div>
-
-        <div class="form-group">
             <label for="conta_contabil_id">Conta Contábil</label>
             <select name="conta_contabil_id" class="form-control" required>
                 <option value="">-- Selecione uma conta contábil --</option>
@@ -32,6 +27,13 @@
                 @endforeach
             </select>
         </div>
+        
+        <div class="form-group">
+            <label for="nome">Nome do Tipo de Serviço</label>
+            <input type="text" name="nome" class="form-control" value="{{ old('nome') }}" required>
+        </div>
+
+        
 
         <br>
         <button type="submit" class="btn btn-primary">Salvar</button>

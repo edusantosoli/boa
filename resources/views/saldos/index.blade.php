@@ -32,13 +32,10 @@
                     </td>
                     <td>{{ $saldo->ano }}</td>
                     <td>R$ {{ number_format($saldo->valor, 2, ',', '.') }}</td>
-
-                    @php
-                        $chave = $saldo->conta_contabil_id . '-' . $saldo->centro_de_custo_id . '-' . $saldo->ano;
-                        $total = $saldosTotais[$chave]->total ?? 0;
-                    @endphp
-                    <td>R$ {{ number_format($total, 2, ',', '.') }}</td>
-
+                    
+                    
+                    <td>R$ {{ number_format($saldo->saldo, 2, ',', '.') }}</td>
+                    
                     <td>
                         <a href="{{ route('saldos.edit', $saldo->id) }}" class="btn btn-sm btn-warning">Editar</a>
 

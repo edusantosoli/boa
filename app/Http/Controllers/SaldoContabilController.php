@@ -48,9 +48,13 @@ class SaldoContabilController extends Controller
             'ano' => 'required|digits:4',
             'valor' => 'required|numeric',
         ]);
-
-        SaldoContabil::create($request->all());
-
+    
+        // Adiciona saldo com o mesmo valor informado
+        $dados = $request->all();
+        $dados['saldo'] = $dados['valor'];
+    
+        SaldoContabil::create($dados);
+    
         return redirect()->route('saldos.index')->with('success', 'Saldo cadastrado com sucesso.');
     }
 
