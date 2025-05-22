@@ -46,12 +46,38 @@
         </div>
 
         <div class="mb-3">
+            <label for="saldo_original" class="form-label">Saldo Original (R$)</label>
+            <input type="number" id="saldo_original" name="saldo_original" class="form-control" value="{{ $saldo->saldo }}" readonly>
+        </div>
+
+        <div class="mb-3">
             <label for="valor" class="form-label">Valor (R$)</label>
-            <input type="text" name="valor" class="form-control" value="{{ $saldo->valor }}" required>
+            <input type="number" id="valor" name="valor" class="form-control" value="{{ $saldo->valor }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="saldo_Atualizado" class="form-label">Saldo Atualizado (R$)</label>
+            <input type="text" id="saldo_atualizado" name="saldo_atualizado" class="form-control" value="{{ $saldo->saldo }}" required>
         </div>
 
         <button type="submit" class="btn btn-primary">Atualizar</button>
         <a href="{{ route('saldos.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const valorInput = document.querySelector('#valor');
+        const saldoOriginalInput = document.querySelector('#saldo_original');
+        const saldoAtualizadoInput = document.querySelector('#saldo_atualizado');
+
+        function atualizarSaldoAtualizado() {
+            const valor = parseFloat(valorInput.value) || 0;
+            const saldoOriginal = parseFloat(saldoOriginalInput.value) || 0;
+            const saldoAtualizado = saldoOriginal + valor;
+            saldoAtualizadoInput.value = saldoAtualizado.toFixed(2);
+        }
+
+        valorInput.addEventListener('input', atualizarSaldoAtualizado);
+    });
+</script>
 @endsection

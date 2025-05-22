@@ -3,32 +3,61 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pagamento;
-use App\Models\SaldosContabeis;
-use Illuminate\Http\Request;
 use App\Models\SaldoContabil;
-use App\Imports\LancamentosImport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\CentroDeCusto;
 use App\Models\TipoServico;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\PagamentosImport;
+
 class PagamentoController extends Controller
 {
-    // Listar todos os pagamentos
-    public function index()
+    // Listagem com filtros
+    public function index(Request $request)
     {
-        $pagamentos = Pagamento::with('saldoContabil.centroDeCusto','saldoContabil.contaContabil')->latest()->paginate(10);
-        return view('pagamentos.index', compact('pagamentos'));
+        $query = Pagamento::with([
+            'saldoContabil.centroDeCusto',
+            'saldoContabil.contaContabil',
+            'tipoServico'
+        ]);
+
+        if ($request->filled('centro_custo_id')) {
+            $query->whereHas('saldoContabil.centroDeCusto', function ($q) use ($request) {
+                $q->where('id', $request->centro_custo_id);
+            });
+        }
+
+        if ($request->filled('tipo_servico_id')) {
+            $query->where('tipo_servico_id', $request->tipo_servico_id);
+        }
+
+        if ($request->filled('data_inicio')) {
+            $query->whereDate('data_pagamento', '>=', $request->data_inicio);
+        }
+
+        if ($request->filled('data_fim')) {
+            $query->whereDate('data_pagamento', '<=', $request->data_fim);
+        }
+
+        $pagamentos = $query->orderByDesc('data_pagamento')->paginate(10);
+
+        $centros_custo = CentroDeCusto::orderBy('descricao')->get();
+        $tipos_servico = TipoServico::orderBy('nome')->get();
+
+        return view('pagamentos.index', compact('pagamentos', 'centros_custo', 'tipos_servico'));
     }
 
-    // Mostrar formulário de criação
+    // Exibir formulário de criação
     public function create()
     {
         $saldos = SaldoContabil::with(['centroDeCusto', 'contaContabil'])->get();
 
-    // Aqui estamos buscando apenas tipos de serviço com conta contábil associada
-    $tiposServicos = TipoServico::with('contaContabil')
-        ->whereNotNull('conta_contabil_id')
-        ->get();
+        $tiposServicos = TipoServico::with('contaContabil')
+            ->whereNotNull('conta_contabil_id')
+            ->get();
 
-    return view('pagamentos.create', compact('saldos', 'tiposServicos'));
+        return view('pagamentos.create', compact('saldos', 'tiposServicos'));
     }
 
     // Armazenar novo pagamento
@@ -41,42 +70,42 @@ class PagamentoController extends Controller
             'cp' => 'nullable|string|max:10',
             'fornecedor' => 'nullable|string|max:255',
             'notafiscal' => 'nullable|string|max:50',
-            'data_vencimento' => 'required|date', // O input vem como Y-m-d mesmo que você exiba como d/m/Y
+            'data_vencimento' => 'required|date',
             'valor_original' => 'nullable|numeric|min:0.01',
             'descricao' => 'nullable|string|max:255',
             'tipo_servico_id' => 'required|exists:tipo_servicos,id',
         ]);
 
-        $saldo = SaldosContabeis::findOrFail($request->saldos_contabeis_id);
+        DB::transaction(function () use ($request) {
+            $saldo = SaldoContabil::findOrFail($request->saldos_contabeis_id);
 
-        if ($request->valor > $saldo->saldo) {
-            return back()->withErrors(['valor' => 'O valor excede o saldo disponível.'])->withInput();
-        }
+            if ($request->valor > $saldo->saldo) {
+                throw new \Exception('O valor excede o saldo disponível.');
+            }
 
-        // Criar pagamento
-        $pagamento = Pagamento::create($request->all());
+            Pagamento::create($request->all());
 
-        // Abater valor do saldo
-        $saldo->saldo -= $request->valor;
-        $saldo->save();
+            $saldo->saldo -= $request->valor;
+            $saldo->save();
+        });
 
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento registrado com sucesso!');
     }
 
-    // Mostrar formulário de edição
+    // Exibir formulário de edição
     public function edit($id)
     {
         $pagamento = Pagamento::findOrFail($id);
-       
-        $saldos = SaldoContabil::with('centroDeCusto','contaContabil')->get();
-        $contaContabilId = $pagamento->saldoContabil->conta_contabil_id ?? null;
+        $saldos = SaldoContabil::with('centroDeCusto', 'contaContabil')->get();
 
         $tipos_servico = [];
-        if ($contaContabilId){
+        $contaContabilId = $pagamento->saldoContabil->conta_contabil_id ?? null;
+
+        if ($contaContabilId) {
             $tipos_servico = TipoServico::where('conta_contabil_id', $contaContabilId)->get();
         }
 
-        return view('pagamentos.edit', compact('pagamento', 'saldos'))->with('tipos_servico', $tipos_servico);
+        return view('pagamentos.edit', compact('pagamento', 'saldos', 'tipos_servico'));
     }
 
     // Atualizar pagamento
@@ -89,32 +118,32 @@ class PagamentoController extends Controller
             'cp' => 'nullable|string|max:10',
             'fornecedor' => 'nullable|string|max:255',
             'notafiscal' => 'nullable|string|max:50',
-            'data_vencimento' => 'nullable|date_format:Y-m-d', // O input vem como Y-m-d mesmo que você exiba como d/m/Y
-            'valor_Original' => 'required|numeric|min:0.01',
+            'data_vencimento' => 'nullable|date',
+            'valor_original' => 'required|numeric|min:0.01',
             'descricao' => 'nullable|string|max:255',
             'tipo_servico_id' => 'required|exists:tipo_servicos,id',
         ]);
 
-        $pagamento = Pagamento::findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
+            $pagamento = Pagamento::findOrFail($id);
 
-        // Repor saldo anterior
-        $saldoAntigo = SaldosContabeis::findOrFail($pagamento->saldos_contabeis_id);
-        $saldoAntigo->saldo += $pagamento->valor;
-        $saldoAntigo->save();
+            // Repor saldo anterior
+            $saldoAntigo = SaldoContabil::findOrFail($pagamento->saldos_contabeis_id);
+            $saldoAntigo->saldo += $pagamento->valor;
+            $saldoAntigo->save();
 
-        // Aplicar novo pagamento
-        $novoSaldo = SaldosContabeis::findOrFail($request->saldos_contabeis_id);
+            // Aplicar novo saldo
+            $novoSaldo = SaldoContabil::findOrFail($request->saldos_contabeis_id);
 
-        if ($request->valor > $novoSaldo->saldo) {
-            return back()->withErrors(['valor' => 'O valor excede o saldo disponível.'])->withInput();
-        }
+            if ($request->valor > $novoSaldo->saldo) {
+                throw new \Exception('O valor excede o saldo disponível.');
+            }
 
-        // Atualizar pagamento
-        $pagamento->update($request->all());
+            $pagamento->update($request->all());
 
-        // Abater novo valor
-        $novoSaldo->saldo -= $request->valor;
-        $novoSaldo->save();
+            $novoSaldo->saldo -= $request->valor;
+            $novoSaldo->save();
+        });
 
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento atualizado com sucesso!');
     }
@@ -122,26 +151,65 @@ class PagamentoController extends Controller
     // Excluir pagamento
     public function destroy($id)
     {
-        $pagamento = Pagamento::findOrFail($id);
-        $saldo = SaldosContabeis::findOrFail($pagamento->saldos_contabeis_id);
+        DB::transaction(function () use ($id) {
+            $pagamento = Pagamento::findOrFail($id);
+            $saldo = SaldoContabil::findOrFail($pagamento->saldos_contabeis_id);
 
-        // Repor o valor ao saldo
-        $saldo->saldo += $pagamento->valor;
-        $saldo->save();
+            $saldo->saldo += $pagamento->valor;
+            $saldo->save();
 
-        $pagamento->delete();
+            $pagamento->delete();
+        });
 
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento excluído com sucesso!');
     }
 
-    public function importar(Request $request)
-{
-    $request->validate([
-        'arquivo' => 'required|file|mimes:xlsx,xls',
-    ]);
+    public function destroySelecionados(Request $request)
+    {
+     $ids = $request->input('selecionados', []);
 
-    Excel::import(new LancamentosImport, $request->file('arquivo'));
+    if (empty($ids)) {
+        return redirect()->route('pagamentos.index')->with('error', 'Nenhum pagamento selecionado.');
+    }
 
-    return redirect()->route('pagamentos.index')->with('success', 'Lançamentos importados com sucesso!');
-}
+    \App\Models\Pagamento::whereIn('id', $ids)->delete();
+
+    return redirect()->route('pagamentos.index')->with('success', 'Pagamentos selecionados excluídos com sucesso.');
+    }
+
+
+
+
+    // View de importação
+    public function importarPagamentosView()
+    {
+        return view('pagamentos.importar');
+    }
+
+    // Importar planilha de pagamentos
+    public function importarPagamentos(Request $request)
+    {
+        $request->validate([
+            'arquivo' => 'required|file|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new PagamentosImport, $request->file('arquivo'));
+            return back()->with('success', 'Pagamentos importados com sucesso!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['arquivo' => 'Erro ao importar: ' . $e->getMessage()]);
+        }
+    }
+
+    // Redirecionar show para index
+    public function show($id)
+    {
+        return redirect()->route('pagamentos.index');
+    }
+
+    public function porConta($contaId)
+    {
+        $tipos = TipoServico::where('conta_contabil_id', $contaId)->get();
+        return response()->json($tipos);
+    }
 }

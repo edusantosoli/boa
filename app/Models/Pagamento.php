@@ -9,6 +9,8 @@ class Pagamento extends Model
 {
     use HasFactory;
 
+    protected $table = 'pagamentos';
+
     protected $casts = [
         'data_pagamento' => 'date',
         'data_vencimento' => 'date',

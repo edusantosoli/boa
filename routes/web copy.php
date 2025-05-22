@@ -67,14 +67,14 @@ Route::get('/centros/export/pdf', [CentroDeCustoController::class, 'exportPdf'])
 Route::resource('saldos', SaldoContabilController::class);
 
 Route::resource('lancamentos', LancamentoContabilController::class);
-
+Route::resource('pagamentos', PagamentoController::class);
+Route::post('/pagamentos/importar', [PagamentoController::class, 'importar'])->name('pagamentos.importar');
 Route::get('/tipos-servico/por-conta/{contaId}', function ($contaId) {
     return \App\Models\TipoServico::where('conta_contabil_id', $contaId)->get();
     });
 Route::get('/tipos-servico/por-conta/{contaId}', [TipoServicoController::class, 'porConta']);
-
+Route::get('/tipos-servico/por-conta/{contaId}', [App\Http\Controllers\TipoServicoController::class, 'porConta']);
+Route::post('/importar-pagamentos', [PagamentoController::class, 'importarPagamentos'])->name('pagamentos.importar');
 Route::get('/pagamentos/importar', [PagamentoController::class, 'importarPagamentosView'])->name('pagamentos.importar.view');
 Route::post('/pagamentos/importar', [PagamentoController::class, 'importarPagamentos'])->name('pagamentos.importar');
-Route::resource('pagamentos', PagamentoController::class);
-Route::post('/pagamentos/excluir-selecionados', [PagamentoController::class, 'destroySelecionados'])->name('pagamentos.destroy.selecionados');
-
+Route::resource('pagamentos', PagamentoController::class)->except(['show']);

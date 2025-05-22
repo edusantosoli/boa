@@ -33,7 +33,6 @@
                     <a class="collapse-item" href="{{ route('tipo-servicos.index') }}">Tipo de Serviços</a>
                     <a class="collapse-item" href="{{ route('centros.index') }}">Centro de Custo</a>
                     <a class="collapse-item" href="{{ route('saldos.index') }}">Saldo Contas</a>
-                    <a class="collapse-item" href="{{ route('lancamentos.index') }}">Lançamentos</a>
                     <a class="collapse-item" href="{{ route('pagamentos.index') }}">Pagamentos</a>
                 </div>
             </div>

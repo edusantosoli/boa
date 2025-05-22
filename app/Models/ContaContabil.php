@@ -16,7 +16,10 @@ class ContaContabil extends Model
             return $this->hasMany(TipoServico::class, 'conta_contabil_id');
         } 
 
-
+        public function tipoServico()
+        {
+            return $this->belongsTo(TipoServico::class);
+        }
 
 
 }

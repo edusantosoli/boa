@@ -80,18 +80,29 @@ class SaldoContabilController extends Controller
      * Atualiza um saldo no banco de dados.
      */
     public function update(Request $request, SaldoContabil $saldo)
-    {
-        $request->validate([
-            'conta_contabil_id' => 'required|exists:conta_contabils,id',
-            'centro_de_custo_id' => 'required|exists:centros_de_custo,id',
-            'ano' => 'required|digits:4',
-            'valor' => 'required|numeric',
-        ]);
+{
+    $request->validate([
+        'conta_contabil_id' => 'required|exists:conta_contabils,id',
+        'centro_de_custo_id' => 'required|exists:centros_de_custo,id',
+        'ano' => 'required|digits:4',
+        'valor' => 'required|numeric',
+    ]);
 
-        $saldo->update($request->all());
+    // Recalcula o saldo: saldo original + novo valor
+    $novoValor = $request->input('valor');
+    $novoSaldo = $saldo->saldo + $novoValor;
 
-        return redirect()->route('saldos.index')->with('success', 'Saldo atualizado com sucesso.');
-    }
+    // Atualiza os dados
+    $saldo->update([
+        'conta_contabil_id' => $request->input('conta_contabil_id'),
+        'centro_de_custo_id' => $request->input('centro_de_custo_id'),
+        'ano' => $request->input('ano'),
+        'valor' => $novoValor,
+        'saldo' => $novoSaldo,
+    ]);
+
+    return redirect()->route('saldos.index')->with('success', 'Saldo atualizado com sucesso.');
+}
 
     /**
      * Remove um saldo do banco de dados.

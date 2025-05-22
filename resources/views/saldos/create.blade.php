@@ -2,7 +2,7 @@
 
 @section('content')
 
-<div class="container">
+<div>
     <h1> Cadastrar saldos Contabeis</h1>
     @if ($errors->any())
         <div class="alert alert-danger">
