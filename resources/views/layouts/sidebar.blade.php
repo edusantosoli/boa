@@ -51,8 +51,8 @@
                 data-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
                     <h6 class="collapse-header">Gerenciais:</h6>
-                    <a class="collapse-item" href="#">Contas Contábeis</a>
-                    <a class="collapse-item" href="#">Centro de Custos</a>
+                    <a class="collapse-item" href="{{ route('contas.index') }}">Contas Contábeis</a>
+                    <a class="collapse-item" href="{{ route('centros.index') }}">Centro de Custos</a>
                     <div class="collapse-divider"></div>
                     <h6 class="collapse-header">Outros:</h6>
                     <a class="collapse-item" href="#">Pagamentos</a>

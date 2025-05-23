@@ -19,21 +19,21 @@
         @csrf
 
         <div class="form-group">
-            <label for="conta_contabil_id">Conta Contábil</label>
-            <select name="conta_contabil_id" class="form-control" required>
-                <option value="">-- Selecione uma conta contábil --</option>
+            <label for="conta_contabil">Conta Contábil</label>
+            <input type="text" name="conta_contabil" id="conta_contabil" list="lista_contas" class="form-control" required>
+            <datalist id="lista_contas">
                 @foreach ($contas as $conta)
-                <option value="{{ $conta->id }}">{{ $conta->codigo }} - {{ $conta->descricao }}</option>
+                    <option value="{{ $conta->codigo }} - {{ $conta->descricao }}">
                 @endforeach
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="nome">Nome do Tipo de Serviço</label>
-            <input type="text" name="nome" class="form-control" value="{{ old('nome') }}" required>
+            </datalist>
         </div>
 
-        
+        <input type="hidden" name="conta_contabil_id" id="conta_contabil_id" />
+
+        <div class="form-group mt-3">
+            <label for="nome">Nome do Tipo de Serviço</label>
+            <input type="text" name="nome" id="nome" class="form-control" value="{{ old('nome') }}" required>
+        </div>
 
         <br>
         <button type="submit" class="btn btn-primary">Salvar</button>
@@ -41,3 +41,15 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    const contas = @json($contas);
+
+    document.getElementById('conta_contabil').addEventListener('input', function () {
+        const input = this.value.trim();
+        const selecionada = contas.find(c => (c.codigo + ' - ' + c.descricao) === input);
+        document.getElementById('conta_contabil_id').value = selecionada ? selecionada.id : '';
+    });
+</script>
+@endpush

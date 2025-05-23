@@ -61,9 +61,9 @@ class TipoServicoController extends Controller
     }
 
     public function porConta($contaId)
-    {
+{
     $tipos = TipoServico::where('conta_contabil_id', $contaId)->get();
 
     return response()->json($tipos);
-    }
+}
 }
